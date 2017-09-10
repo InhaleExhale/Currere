@@ -1,0 +1,5 @@
+{
+  "require" : {
+    "iamstuartwilson/strava" : "~1.3"
+  }
+}

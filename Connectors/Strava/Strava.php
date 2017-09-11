@@ -33,7 +33,7 @@ class Strava extends Connector
             return true;
         } else {
             var_dump("Authenticating");
-            $redirectUrl = 'http://localhost/Currere/?controller=Authentication&connector=Strava&action=complete';
+            $redirectUrl = "http://{$_SERVER['HTTP_HOST']}/Currere/?controller=Authentication&connector=Strava&action=complete";
             echo "<a href=\"{$this->api->authenticationUrl($redirectUrl)}\">Connect...</a>";
         }
         return false;

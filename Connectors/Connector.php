@@ -23,7 +23,7 @@ abstract class Connector
 class Factory
 {
 
-    static function all($load = true)
+    static function requireAll($load = true)
     {
         $connectorPath = \Helpers\Path::join(array(__ROOT, "Connectors"));
 
@@ -49,5 +49,9 @@ class Factory
         }
 
         return $dirs;
+    }
+
+    static function create($type, $params) {
+        return $type::create($params);
     }
 }

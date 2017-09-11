@@ -9,11 +9,7 @@
 namespace Connectors;
 
 require_once(__ROOT . "/Connectors/Connector.php");
-require_once(__ROOT . "/vendor/autoload.php");
-
-
 use Iamstuartwilson\StravaApi;
-
 
 class Strava extends Connector
 {
@@ -36,8 +32,9 @@ class Strava extends Connector
         if ($this->loadToken()) {
             return true;
         } else {
-            $redirectUrl = '/?action=auth&connector=strava&task=storeToken';
-            $this->api->authenticationUrl($redirectUrl);
+            var_dump("Authenticating");
+            $redirectUrl = 'http://localhost/Currere/?controller=Authentication&connector=Strava&action=complete';
+            echo "<a href=\"{$this->api->authenticationUrl($redirectUrl)}\">Connect...</a>";
         }
         return false;
     }
@@ -57,7 +54,12 @@ class Strava extends Connector
     {
         $this->accessToken = $rawToken;
         $encryptedToken = \Helpers\Token::encrypt($rawToken);
-        file_put_contents($this->tokenPath,$encryptedToken);
+        file_put_contents($this->tokenPath, $encryptedToken);
+    }
+
+    public function getResponseToken()
+    {
+        return \Helpers\Request::get('code', null);
     }
 
     public function getActivities()
@@ -77,7 +79,7 @@ class Strava extends Connector
             'clientSecret' => \Config::get('strava/clientSecret')
         );
 
-        return new Strava($params);
+        return new Strava($params, $options);
     }
 
 }

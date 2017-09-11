@@ -16,12 +16,14 @@ abstract class Connector
     protected $accessToken;
 
     abstract function authenticate();
-
-    abstract function getActivities();
+    abstract function loadToken();
+    abstract function storeToken($rawToken);
+    abstract function getResponseToken();
 }
 
 class Factory
 {
+    static $connectors = array();
 
     static function requireAll($load = true)
     {
@@ -39,11 +41,12 @@ class Factory
                         "{$filename}.php"
                     ));
 
-                        if(file_exists($helperPath)) {
-                            require_once($helperPath);
-                        } else {
-                            trigger_error("{$helperPath}: Connector file not found", E_USER_WARNING);
-                        }
+                    if (file_exists($helperPath)) {
+                        self::$connectors[] = $filename;
+                        require_once($helperPath);
+                    } else {
+                        trigger_error("{$helperPath}: Connector file not found", E_USER_WARNING);
+                    }
                 }
             }
         }
@@ -51,7 +54,12 @@ class Factory
         return $dirs;
     }
 
-    static function create($type, $params) {
-        return $type::create($params);
+    static function create($type, $options = array())
+    {
+        if (!in_array($type, self::$connectors)) {
+            throw new \Exception("Connector not found: " . $type);
+        }
+        $type = "\\Connectors\\{$type}";
+        return $type::create($options);
     }
 }

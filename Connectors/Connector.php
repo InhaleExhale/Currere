@@ -14,7 +14,6 @@ abstract class ConnectorAuthenticator
 
     protected $accessToken;
 
-    abstract function authenticate();
     abstract function loadToken();
     abstract function storeToken($rawToken);
     abstract function clearToken();

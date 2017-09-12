@@ -17,7 +17,7 @@ class Auth extends ConnectorAuthenticator
     private $tokenPath;
     private $api;
     protected $accessToken;
-
+    public $accessInfo;
 
     public function __construct(\Iamstuartwilson\StravaApi $api)
     {
@@ -25,39 +25,32 @@ class Auth extends ConnectorAuthenticator
         $this->tokenPath = \Helpers\Path::join(array(__ROOT, 'Connectors', 'Strava', 'strava.token'));
     }
 
-    public function authenticate()
+    public function authenticationLink()
     {
-        if ($this->hasToken()) {
-            return $this->loadToken();
-        } else {
-            $appRoot = \Config::get('core/appRoot');
-            $redirectRawUrl = "http://{$_SERVER['HTTP_HOST']}{$appRoot}/" .
-                "?controller=Authentication&connector=Strava&action=complete";
+        $appRoot = \Config::get('core/appRoot');
+        $redirectRawUrl = "/?controller=Authentication&connector=Strava&action=complete";
 
-            $redirectUrl = \Helpers\Path::queryToUri($redirectRawUrl);
+        $redirectUrl = \Helpers\Path::queryToUri($redirectRawUrl, true);
 
-            $authUrl = $this->api->authenticationUrl($redirectUrl);
-            \Helpers\Path::redirect($authUrl);
-        }
-        return false;
+        return $this->api->authenticationUrl($redirectUrl);
     }
 
     /// TODO: Eventually these should be stored against a user in the DB (encrypted), currently assume single user
     public function loadToken()
     {
         if ($this->hasToken()) {
-            $encryptedToken = file_get_contents($this->tokenPath);
-            $this->accessToken = \Helpers\Token::decrypt($encryptedToken);
-            return $this->accessToken;
+            $encryptedInfo= file_get_contents($this->tokenPath);
+            $this->accessInfo = json_decode(\Helpers\Token::decrypt($encryptedInfo));
+            return $this->accessInfo->access_token;
         }
         return false;
     }
 
-    public function storeToken($rawToken)
+    public function storeToken($rawTokenInfo)
     {
-        $this->accessToken = $rawToken;
-        $encryptedToken = \Helpers\Token::encrypt($rawToken);
-        file_put_contents($this->tokenPath, $encryptedToken);
+        $this->accessInfo = $rawTokenInfo;
+        $encryptedInfo = \Helpers\Token::encrypt(json_encode($rawTokenInfo));
+        file_put_contents($this->tokenPath, $encryptedInfo);
     }
 
     public function clearToken()
@@ -76,7 +69,7 @@ class Auth extends ConnectorAuthenticator
 
     public function setApiAccessToken()
     {
-        $this->api->setAccessToken($this->accessToken);
+        $this->api->setAccessToken($this->accessInfo->access_token);
     }
 
     public function getResponseToken()

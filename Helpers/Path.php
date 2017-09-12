@@ -18,16 +18,17 @@ namespace Helpers {
             return join(DIRECTORY_SEPARATOR, $pieces);
         }
 
-        static function queryToUri($query)
+        static function queryToUri($query, $absoluteUrl=false)
         {
             if (!\config::get('core/useSef')) {
-                return \Config::get('core/appRoot').$query;
+                return ($absoluteUrl ? "http://{$_SERVER['HTTP_HOST']}" : "" ) . \Config::get('core/appRoot').$query;
             } else {
                 return '/SEF_NOT_IMPLEMENTED';
             }
         }
 
-        static function redirect($url) {
+        static function redirect($url, $toUri=false) {
+            $url = $toUri ? self::queryToUri($url) : $url;
             header("Location: {$url}");
             exit;
         }

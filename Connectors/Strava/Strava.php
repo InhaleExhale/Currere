@@ -30,25 +30,45 @@ class Strava extends Connector
         $this->authenticator = new Strava\Auth($this->api);
     }
 
+    public function authoriseLink()
+    {
+        return $this->authenticator->authenticationLink();
+    }
+
+    public function complete()
+    {
+        $token = $this->authenticator->getResponseToken();
+        $this->authenticator->storeToken($token);
+        \Helpers\Path::redirect('/', true);
+    }
+
     public function authorise()
     {
-        if($this->authenticator->authenticate()) {
+        if($this->authenticator->hasToken()) {
+            $this->authenticator->loadToken();
             $this->authenticator->setApiAccessToken();
+            return true;
+        } else {
+            return false;
         }
     }
 
     public function deauthorise()
     {
         $this->authenticator->clearToken();
+        \Helpers\Path::redirect('/', true);
     }
 
-    public function isauthorised() {
+
+    public function isAuthorised() {
         return $this->authenticator->hasToken();
     }
 
     public function getActivities()
     {
         // TODO: Implement getActivities() method.
+        $activities = $this->api->get('athlete/activities',['per_page'=>100]);
+        return $activities;
     }
 
     static function test()

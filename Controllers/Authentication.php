@@ -32,12 +32,11 @@ class Authentication extends Base
     }
 
     public function deauthorise() {
-        $this->connector->clearToken();
+        $this->connector->deauthorise();
     }
 
     public function complete() {
-        $token = $this->connector->getResponseToken();
-        $this->connector->storeToken($token);
+        $this->connector->complete();
         echo "<h2>Token complete</h2>";
     }
 
@@ -45,9 +44,5 @@ class Authentication extends Base
     {
         echo "DEFAULT AUTHENTICATION ACTION";
         // TODO: Implement defaultAction() method.
-    }
-
-    public function getToken($params) {
-
     }
 }

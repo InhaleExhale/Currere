@@ -10,6 +10,7 @@ session_start();
 define("__ROOT", dirname(__FILE__));
 define("__VENDOR", join(DIRECTORY_SEPARATOR, array(__ROOT, "vendor")));
 
+ob_start();
 require_once('vendor/autoload.php');
 require_once('./config.php');
 
@@ -32,4 +33,4 @@ $controllerClassName = "\\Controllers\\{$controllerName}";
 $controller = new $controllerClassName(array(/* TODO: probably something needs to go here */));
 $controller->dispatch($actionName);
 
-
+echo ob_get_clean();

@@ -17,6 +17,8 @@ class Core extends Base
     }
 
     public function defaultAction($params) {
-        echo $this->templates->render('core/home');
+
+        $connectors = \Connectors\Factory::createAll();
+        echo $this->templates->render('core/home', ['connectors' => $connectors]);
     }
 }

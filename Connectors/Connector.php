@@ -9,21 +9,40 @@
 namespace Connectors;
 require_once(__ROOT . "/Helpers/Path.php");
 
-abstract class Connector
+abstract class ConnectorAuthenticator
 {
 
-    protected $activities;
     protected $accessToken;
 
     abstract function authenticate();
     abstract function loadToken();
     abstract function storeToken($rawToken);
+    abstract function clearToken();
+    abstract function setApiAccessToken();
     abstract function getResponseToken();
+}
+
+abstract class Connector
+{
+
+    protected $activities;
+    protected $authenticator;
+
+    abstract function authorise();
+    abstract function deauthorise();
+
+    public function getClass() {
+        return get_class($this);
+    }
 }
 
 class Factory
 {
     static $connectors = array();
+
+    static function getList() {
+        return self::$connectors;
+    }
 
     static function requireAll($load = true)
     {
@@ -61,5 +80,11 @@ class Factory
         }
         $type = "\\Connectors\\{$type}";
         return $type::create($options);
+    }
+
+    static function createAll() {
+        return array_map(function($connectorType) {
+            return self::create($connectorType);
+        }, self::$connectors);
     }
 }

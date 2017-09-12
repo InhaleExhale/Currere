@@ -6,6 +6,6 @@
 </head>
 <body>
 <h1>Currere Demo Page</h1>
-<p><a href="<?=$this->e($this->queryToUri('/?controller=Authentication&connector=Strava&action=authenticate'));?>">Connect Strava</a></p>
+<?php $this->insert('core/connectors', ['connectors' => $connectors]); ?>
 </body>
 </html>

@@ -24,11 +24,15 @@ class Authentication extends Base
         $this->connector = \Connectors\Factory::create($connectorName);
     }
 
-    public function authenticate() {
-        if($this->connector->authenticate()) {
+    public function authorise() {
+        if($this->connector->authorise()) {
             $token = $this->connector->loadToken();
-            echo "<h2>TOKEN: {$token}</h2>";
+            echo "<h2>GOT TOKEN: {$token}</h2>";
         }
+    }
+
+    public function deauthorise() {
+        $this->connector->clearToken();
     }
 
     public function complete() {
@@ -44,7 +48,6 @@ class Authentication extends Base
     }
 
     public function getToken($params) {
-        var_dump($this->connector->loadToken());
 
     }
 }

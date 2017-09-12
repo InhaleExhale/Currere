@@ -26,5 +26,10 @@ namespace Helpers {
                 return '/SEF_NOT_IMPLEMENTED';
             }
         }
+
+        static function redirect($url) {
+            header("Location: {$url}");
+            exit;
+        }
     }
 }

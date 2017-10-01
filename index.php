@@ -14,6 +14,8 @@ ob_start();
 require_once('vendor/autoload.php');
 require_once('./config.php');
 
+require_once('./core/Database.php');
+
 /// TODO: Helper loader - this is rapidly getting excessive
 require_once('./Helper.php');
 Helpers\Helper::loadAll();
@@ -23,6 +25,8 @@ Helpers\Templates::get();
 
 require_once('connectors/Connector.php');
 $connectors = Connectors\Factory::requireAll(true);
+require_once('models/Model.php');
+$models = Models\Factory::requireAll(true);
 
 $controllerName = \Helpers\Request::get('controller', 'Core');
 $actionName = \Helpers\Request::get('action', 'defaultAction');

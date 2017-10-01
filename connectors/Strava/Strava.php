@@ -70,7 +70,7 @@ class Strava extends Connector
         // TODO: Implement getActivities() method.
         $activities = $this->api->get('athlete/activities',['per_page'=>100]);
 
-        return array_map(self::activity,$activities);
+        return array_map('self::activity', $activities);
     }
 
     static function test()
@@ -91,7 +91,7 @@ class Strava extends Connector
     static function activity($activity) {
         $mapping = array(
             "source_id" => "id",
-            "source_user" => "athlete.id",
+            "source_user" => "athlete->id",
             "name" => "name",
             "type" => "type",
             "activity_date" => "start_date",
@@ -101,11 +101,11 @@ class Strava extends Connector
             "average_heartrate" => "average_heartrate",
             "elevation_gain" => "total_elevation_gain",
             "calories" => "",
-            "route" => "map.summary_polyline",
-            "start_position" => "[start_latitude, start_longitude]"
+            "route" => "map->summary_polyline",
+            "start_position" => array("start_latitude", "start_longitude")
         );
 
-        return \Models\Activity::fromMapping($activity, $mapping);
+        return \Models\Activity::fromMapping('Strava', $mapping, $activity);
     }
 
 }

@@ -12,10 +12,11 @@ class Config
             "appRoot" => "/Currere"
         ),
         "database" => array(
+            "host" => "<DB_HOST>",
             "name" => "<DB_NAME>",
             "username" => "<USERNAME>",
-            "password" => "<PASSWORD>",
-
+            "password" => "<PASSWORD>",,
+            "prefix" => "crr"
         ),
         "strava" => array(
             "clientId" => "<STRAVA_CLIENT_ID>",

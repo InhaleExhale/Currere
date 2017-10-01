@@ -23,7 +23,12 @@ class Activity extends Base
     }
 
     public function getActivities($params) {
-        echo "<pre>" . print_r($this->connector->getActivities($params),1 ) . "</pre>";
+        $activities = $this->connector->getActivities($params);
+        foreach($activities as $activity) {
+            $activity->save();
+        }
+
+        echo "<pre>" . print_r($activities,1 ) . "</pre>";
     }
 
 

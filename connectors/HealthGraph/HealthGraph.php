@@ -8,13 +8,13 @@
 
 namespace Connectors;
 
-require_once(__ROOT . "/Connectors/Connector.php");
+require_once(__ROOT . "/connectors/Connector.php");
 require_once("Auth.php");
-use Iamstuartwilson\StravaApi;
+use InhaleExhale\HealthGraphApi;
 
-class Strava extends Connector
+class HealthGraph extends Connector
 {
-    const name = "Strava Connector";
+    const name = "HealthGraph Connector";
     const version = "0.0.1";
 
     protected $authenticator;
@@ -22,12 +22,12 @@ class Strava extends Connector
 
     public function __construct($params, $options = null)
     {
-        $this->api = new StravaApi(
+        $this->api = new HealthGraphApi(
             $params['clientId'],
             $params['clientSecret']
         );
 
-        $this->authenticator = new Strava\Auth($this->api);
+        $this->authenticator = new HealthGraph\Auth($this->api);
     }
 
     public function authoriseLink()
@@ -67,7 +67,8 @@ class Strava extends Connector
     public function getActivities()
     {
         // TODO: Implement getActivities() method.
-        $activities = $this->api->get('athlete/activities',['per_page'=>100]);
+        $parameters = array('pageSize'=>100, 'type' => 'Running');
+        $activities = $this->api->get('fitnessActivities',$parameters);
         return $activities;
     }
 
@@ -79,11 +80,11 @@ class Strava extends Connector
     static function create($options)
     {
         $params = array(
-            'clientId' => \Config::get('strava/clientId'),
-            'clientSecret' => \Config::get('strava/clientSecret')
+            'clientId' => \Config::get('runkeeper/clientId'),
+            'clientSecret' => \Config::get('runkeeper/clientSecret')
         );
 
-        return new Strava($params, $options);
+        return new HealthGraph($params, $options);
     }
 
 }

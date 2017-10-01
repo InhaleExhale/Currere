@@ -27,8 +27,8 @@ $connectors = Connectors\Factory::requireAll(true);
 $controllerName = \Helpers\Request::get('controller', 'Core');
 $actionName = \Helpers\Request::get('action', 'defaultAction');
 
-require_once(Helpers\Path::join(array(__ROOT, 'Controllers', 'Base.php')));
-require_once(Helpers\Path::join(array(__ROOT, 'Controllers', $controllerName . '.php')));
+require_once(Helpers\Path::join(array(__ROOT, 'controllers', 'Base.php')));
+require_once(Helpers\Path::join(array(__ROOT, 'controllers', $controllerName . '.php')));
 $controllerClassName = "\\Controllers\\{$controllerName}";
 $controller = new $controllerClassName(array(/* TODO: probably something needs to go here */));
 $controller->dispatch($actionName);

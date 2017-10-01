@@ -14,7 +14,7 @@ class Helper
 
     static function loadAll()
     {
-        $helpersPath = __ROOT . DIRECTORY_SEPARATOR . 'Helpers';
+        $helpersPath = __ROOT . DIRECTORY_SEPARATOR . 'helpers';
         foreach (new \DirectoryIterator($helpersPath) as $file) {
             if ($file->isFile() && !$file->isDot()) {
                 $filename = $file->getFilename();
@@ -26,5 +26,10 @@ class Helper
                 }
             }
         }
+    }
+
+    static function dump($obj)
+    {
+        echo '<pre>'; var_dump($obj); echo '</pre>';
     }
 }

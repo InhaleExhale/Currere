@@ -7,7 +7,7 @@
  */
 
 namespace Connectors;
-require_once(__ROOT . "/Helpers/Path.php");
+require_once(__ROOT . "/helpers/Path.php");
 
 abstract class ConnectorAuthenticator
 {
@@ -30,8 +30,14 @@ abstract class Connector
     abstract function authorise();
     abstract function deauthorise();
 
-    public function getClass() {
-        return get_class($this);
+    public function getClass($excludeNamespace=false) {
+        $class = get_class($this);
+        if($excludeNamespace) {
+            $pieces = explode('\\', $class);
+            return end($pieces);
+        } else {
+            return $class;
+        }
     }
 }
 
@@ -45,7 +51,7 @@ class Factory
 
     static function requireAll($load = true)
     {
-        $connectorPath = \Helpers\Path::join(array(__ROOT, "Connectors"));
+        $connectorPath = \Helpers\Path::join(array(__ROOT, "connectors"));
 
         $dirs = array();
         foreach (new \DirectoryIterator($connectorPath) as $file) {

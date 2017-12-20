@@ -13,10 +13,13 @@ require_once("Auth.php");
 use Iamstuartwilson\StravaApi;
 use Models\Activity;
 
+
 class Strava extends Connector
 {
     const name = "Strava Connector";
     const version = "0.0.1";
+    const MAX_REQUESTS = 500;
+
 
     protected $authenticator;
     private $api;
@@ -65,12 +68,32 @@ class Strava extends Connector
         return $this->authenticator->hasToken();
     }
 
-    public function getActivities()
+    public function getAllActivities($params = Array())
     {
         // TODO: Implement getActivities() method.
-        $activities = $this->api->get('athlete/activities',['per_page'=>100]);
+        $page = 1;
+        $allActivities = Array();
 
-        return array_map('self::activity', $activities);
+        $since = isset($params['since']) ? $params['since'] : 0;
+
+        while(true) {
+            $activities = $this->api->get('athlete/activities', [
+                'per_page' => 100,
+                'page' => $page++,
+                'after' => $since
+            ]);
+
+            if (count($activities) == 0) {
+               break;
+            }
+            $allActivities = array_merge($allActivities, $activities);
+        }
+
+        return array_map('self::activity', $allActivities);
+    }
+
+    public function getActivity($id, $params = Array()) {
+        return $this->api->get("activities/$id");
     }
 
     static function test()
@@ -89,6 +112,7 @@ class Strava extends Connector
     }
 
     static function activity($activity) {
+
         $mapping = array(
             "source_id" => "id",
             "source_user" => "athlete->id",
@@ -98,7 +122,7 @@ class Strava extends Connector
             "total_distance" => "distance",
             "total_duration" => "elapsed_time",
             "average_speed" => "average_speed",
-            "average_heartrate" => "average_heartrate",
+            "average_heartrate" => $activity->has_heartrate ? "average_heartrate" : "",
             "elevation_gain" => "total_elevation_gain",
             "calories" => "",
             "route" => "map->summary_polyline",
@@ -106,6 +130,17 @@ class Strava extends Connector
         );
 
         return \Models\Activity::fromMapping('Strava', $mapping, $activity);
+    }
+
+    static function gear($gear) {
+
+        $mapping = array(
+            "source_id" => "id",
+            "name" => "name",
+            "description" => "",
+        );
+
+        return \Models\Gear::fromMapping('Strava', $mapping, $gear);
     }
 
 }

@@ -2,3 +2,4 @@
 vendor
 *.token
 config.php
+cache/**/*.json

@@ -11,11 +11,15 @@ class Config
             "appSecret" => "hello_goodbye_1024",
             "appRoot" => "/Currere"
         ),
+        "cache" => array(
+            "rootPath" => (ROOT_PATH . DIRECTORY_SEPARATOR . "cache"),
+            "expirySeconds" => 30*24*60*60
+        ),
         "database" => array(
             "host" => "<DB_HOST>",
             "name" => "<DB_NAME>",
             "username" => "<USERNAME>",
-            "password" => "<PASSWORD>",,
+            "password" => "<PASSWORD>",
             "prefix" => "crr"
         ),
         "strava" => array(

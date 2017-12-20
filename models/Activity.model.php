@@ -10,6 +10,9 @@ namespace Models;
 
 class Activity extends Model
 {
+
+    const TABLE_NAME = 'activity';
+
     private $source;
     private $source_id;
     private $source_user;
@@ -31,57 +34,44 @@ class Activity extends Model
 
     public function __construct($data = null)
     {
-        parent::__construct();
+        parent::__construct($data);
+    }
 
-        if (is_array($data)) {
-            $this->bind($data);
-        } else {
-            $this->id = $data;
+    public function bind($data) {
+        parent::bind($data);
+        if(is_string($this->source_object)) {
+            $this->source_object = json_decode($this->source_object);
         }
     }
 
-    public function bind($data)
+    public function set($field, $value) {
+        $this->$field = $value;
+    }
+
+    public function get($field) {
+        return $this->$field;
+    }
+
+    public function getSourceId()
     {
-        foreach ($data as $field => $value) {
-            if (property_exists($this, $field)) {
-                $this->$field = $value;
-            }
+        return $this->source_id;
+    }
+
+    protected function fieldTemplate($item)
+    {
+        return $item->getName();
+    }
+
+    protected function propertyTemplate($item)
+    {
+        if ($item === "start_position") {
+            return "POINT(:start_lat, :start_lng)";
         }
+        return ":" . $item;
     }
 
 
-    public function save()
-    {
-        if ($this->id === null) {
-            $this->insert();
-        } else {
-            $this->update();
-        }
-    }
-
-    private function getFieldsAndProperties()
-    {
-        $reflection = new \ReflectionClass($this);
-        $vars = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-        $output = new \StdClass();
-        $output->fields = array_map(function ($item) {
-            return $item->getName();
-        }, $vars);
-        $output->fieldString = implode(', ', $output->fields);
-
-        $output->properties = array_map(function ($item) {
-            if ($item === "start_position") {
-                return "POINT(:start_lat, :start_lng)";
-            }
-            return ":" . $item;
-        }, $output->fields);
-
-        $output->propertyString = implode(', ', $output->properties);
-        return $output;
-    }
-
-    private function bindFieldParams($stmt, $fields)
+    protected function bindFieldParams($stmt, $fields)
     {
         foreach ($fields as $field) {
             if ($field === 'start_position') {
@@ -96,68 +86,97 @@ class Activity extends Model
         }
     }
 
-    public function insert()
+    public function delete($id)
     {
-        $dbTable = \Database\table('activity');
+    }
 
-        $fieldProps = $this->getFieldsAndProperties();
+    static public function fromMapping($source, $mapping, $activity)
+    {
+        $data = parent::fromMapping($source, $mapping, $activity);
 
-        $sql = "INSERT INTO {$dbTable} ({$fieldProps->fieldString}) VALUES ({$fieldProps->propertyString});";
+        return new Activity($data);
+    }
+
+    static public function fromRemote($sourceId, $connector)
+    {
+        $cache = \Helpers\Cache\CacheFactory::get("Activity");
+        if (!$cache->check($sourceId)) {
+            $remoteActivity = $connector->getActivity($sourceId);
+            $cache->write($sourceId, $remoteActivity);
+        }
+
+        return $cache->read($sourceId);
+    }
+
+    static public function getLastUpdateTime()
+    {
+        $db = \Database\Factory::getInstance();
+        $activityTable = \Database\table('activity');
+
+        $sql = "SELECT `synced_date` FROM `{$activityTable}` ORDER BY `synced_date` DESC LIMIT 1";
 
         try {
-            $stmt = $this->_db->prepare($sql);
-            $this->bindFieldParams($stmt, $fieldProps->fields);
+            $stmt = $db->prepare($sql);
             $stmt->execute();
+            $stringLastUpdate = $stmt->fetch();
+            $timestampLastUpdate = $stringLastUpdate ? strtotime($stringLastUpdate[0]) : 0;
+            return $timestampLastUpdate;
         } catch (\PDOException $e) {
             print "Error!: " . $e->getMessage() . "<br/>";
             die();
         }
     }
 
-    public function update()
+    static public function getActivityRowsWithoutGear($type = null, $ignoreIndoor = false)
     {
-
-    }
-
-    public function load($id)
-    {
-    }
-
-    public function delete($id)
-    {
-    }
+        $db = \Database\Factory::getInstance();
+        $activityTable = \Database\table('activity');
+        $xrefTable = \Database\table('activity_gear_xref');
 
 
-    static public function fromMapping($source, $mapping, $activity)
-    {
-        $data = array(
-            "id" => null,
-            "source" => $source,
-            "source_object" => $activity
-        );
+        $sql = "SELECT activity.id, activity.source_id FROM `{$activityTable}` AS activity
+                LEFT JOIN `{$xrefTable}` AS gear_xref
+                ON activity.id = gear_xref.activity_id";
 
-        /// TODO: If field doesn't exist, just map it to ""/
-        // 3 syntaxes supported, raw field value, child field (using '->', any depth) or an array of fields to be added
-        foreach ($mapping as $activityField => $mappingField) {
-            if (is_array($mappingField)) {
-                $data[$activityField] = array_map(function ($item) use ($activity) {
-                    return $activity->$item;
-                }, $mappingField);
-            } elseif (strrpos($mappingField, '->') !== false) {
-                $mappingFields = explode('->', $mappingField);
-                $currentValue = $activity;
-                foreach ($mappingFields as $subField) {
-                    $currentValue = $currentValue->$subField;
-                }
-                $data[$activityField] = $currentValue;
-            } elseif ($mappingField === "") {
-                $data[$activityField] = null;
-            } else {
-                $data[$activityField] = $activity->$mappingField;
-            }
+        $wheres = array();
+        if ($type) {
+            $wheres[] = "activity.type='$type'";
         }
 
-        return new Activity($data);
+        if ($ignoreIndoor) {
+            $wheres[] = "activity.route IS NOT NULL";
+        }
+
+        if (count($wheres) > 0) {
+            $sql .= " WHERE " . join(" AND ", $wheres);
+        }
+
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (\PDOException $e) {
+            print "Error!: " . $e->getMessage() . "<br/>";
+            die();
+        }
+    }
+
+    static public function assignGear($activityId, $gearId)
+    {
+        $db = \Database\Factory::getInstance();
+        $xrefTable = \Database\table('activity_gear_xref');
+
+        $sql = "INSERT IGNORE INTO `{$xrefTable}` (activity_id, gear_id) VALUES(:activity_id, :gear_id)";
+
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->bindParam("activity_id", $activityId);
+            $stmt->bindParam("gear_id", $gearId);
+            $stmt->execute();
+        } catch (\PDOException $e) {
+            print "Error!: " . $e->getMessage() . "<br/>";
+            die();
+        }
     }
 
 }

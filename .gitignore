@@ -1,5 +1,1 @@
-.idea
-vendor
-*.token
-config.php
-cache/**/*.json
+# Created by .ignore support plugin (hsz.mobi)
